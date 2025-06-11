@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript" charset="utf-8"></script> 
+  <!--This line above works like an include, including the javascript library "jquery", so we can use extra read and write functions for dynamic updating-->
+<head>
+  
+  <style>
+    /* Style for the main buttons */
+    .main-button {
+      margin-left: 0; /* No indentation for the first column */
+    }
+
+    /* Style for the indented buttons */
+    .indented-button {
+      margin-left: 30px; /* Indent by 30px */
+    }
+
+    .deep-indent-button {
+      margin-left: 60px; /* More indentation for deeper buttons */
+    }
+  </style>
+</head>
+<body>
+    <b>Drone Control Dashboard</b><br>
+    
+    <!--Note that the value of each of these buttons is later sent to carFinal as input through c_setDir-->
+    <form id="driving">
+    <div class="indented-button">
+        <input type="radio" name="driving" value="F"> Forward<br> 
+    </div>
+    <div class="deep-indent-button">
+        <input type="radio" name="driving" value="LF"> Left Forward<br> 
+    </div>
+    <div class="deep-indent-button">
+        <input type="radio" name="driving" value="RF"> Right Forward<br> 
+    </div>
+    <div class="indented-button">
+        <input type="radio" name="driving" value="B"> Backward<br> 
+    </div>
+    <div class="deep-indent-button">
+        <input type="radio" name="driving" value="LB"> Left Back <br> 
+    </div>
+    <div class="deep-indent-button">
+        <input type="radio" name="driving" value="RB"> Right Back <br> 
+    </div>
+    <div class="indented-button">
+      <input type="radio" name="driving" value="S"> Stop<br> 
+  </div>
+  <input type="submit" value="Do it!">
+</form>
+
+<script>
+  //Function that was used in previous iterations that may later be useful again.
+  //It is intended to use the cloud function cF_setMode to change the control mode in carFinal
+  $("#mode").submit(function(event) {
+      event.preventDefault();
+      var functionName = "cF_setMode"; // local variable functionName
+      $.ajax({
+          url: 'https://api.particle.io/v1/devices/'+ deviceID +'/' + functionName,
+          method: "POST",
+          headers: { "Authorization": "Bearer " + accessToken },
+          data: { arg: $("input[name='mode']:checked").val() },
+          //success: () => alert("Message Sent! \n" + 
+          //   "(this doesn't mean it worked! \n" +
+          //   "i.e., may not have a valid ID/Token/FunctionName/etc.)")
+
+      });
+  });
+</script>
+
+<script>
+  //This function responds to button presses above that are marked driving. It sends the value related to the button
+  //to carFinal, allowing carFinal to then enable website control mode and begin moving the tires and servo according to input.
+  $("#driving").submit(function(event) {
+      event.preventDefault();
+      var functionName = "c_setDir"; // local variable functionName
+      $.ajax({
+          url: 'https://api.particle.io/v1/devices/'+ deviceID +'/' + functionName,
+          method: "POST",
+          headers: { "Authorization": "Bearer " + accessToken },
+          data: { arg: $("input[name='driving']:checked").val() },
+          //success: () => alert("Message Sent! \n" + 
+          //   "(this doesn't mean it worked! \n" +
+          //   "i.e., may not have a valid ID/Token/FunctionName/etc.)")
+
+      });
+  });
+</script>
+
+
+    <br> Current Temperature: <span id="current_temp"></span>&deg; F
+    <br> Current Light: <span id="current_light"></span> % Darkness
+    <button id="connectbutton" onclick="start()">Refresh Data</button> <!--This creates a button that calls a function: start-->
+    <script type="text/javascript"> //This updates the text in the above text
+      //NOTE: The <span> tag must occur first or the document object will not be able to find the id.
+        // JavaScript comments work just like C
+        //Sets the initial reading of light and temperature to be undefined, making it clear the user must refresh.
+        document.getElementById("current_temp").innerHTML = "Currently undefined. Refresh to see.";
+        document.getElementById("current_light").innerHTML = "Currently undefined. Refresh to see.";
+      </script>
+</body>
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      //this line must exist outside of body but within html, it allows us to communicate with the photon.
+      // global variables
+      var deviceID = "0a10aced202194944a057bf4";
+      var accessToken = "b55877bc04ee8e89184ad82e3172cc2007cd200c"; //This is only valid til about 10 AM 3/20/25
+      var baseURL = "https://api.particle.io/v1/devices/"
+    </script>
+
+
+<!--this defines the start function, which refreshes the data seen from the car-->
+<script type="text/javascript"> 
+  //This huge section is meant to dynamically update the header text, by accessing the previously defined cloud variables, using a get request
+    function start(objButton) {
+        var varName = "TempCloudF"; // your cloud variable name goes here
+        $.ajax({
+            url: baseURL + deviceID + '/' + varName,
+            headers: {'Authorization': 'Bearer ' + accessToken},
+            method: 'GET',
+success: function(resp) {
+                document.getElementById("current_temp").innerText = resp.result;},
+        });
+
+
+        var varName = "lightCloud";  // this is another cloud variable name
+        $.ajax({
+            url: baseURL + deviceID + '/' + varName,
+            headers: {'Authorization': 'Bearer ' + accessToken},
+            method: 'GET',
+success: function(resp) {
+                document.getElementById("current_light").innerText = resp.result;},
+        });
+    }
+</script>
+
+</html>
+
+
+
