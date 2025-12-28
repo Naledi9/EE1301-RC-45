@@ -185,6 +185,8 @@ if (defaultPosition && websiteCtrl) {
 }
 
  // Send sensor data to website
+ //note that this simply updates the variables which are then copied to the cloud
+ //when the user presses the update information button on the html website
  ADCreading = analogRead(dataTempV);
  lightLevel = analogRead(lightPin);
  tempC = (ADCreading - 620) * 0.0806;
